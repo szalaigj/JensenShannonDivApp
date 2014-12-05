@@ -71,11 +71,15 @@ namespace JensenShannonDivComp.Utils
             double? maxDivergence = null;
             string seqPrefixForMax = "";
             string seqPostfixForMax = "";
+            Dictionary<char, long> chrCountsPrefix = frequencyComputer.initChrCountsDict();
+            Dictionary<char, long> chrCountsPostfix = frequencyComputer.initChrCountsDict();
+            frequencyComputer.countCharsInSeq(sequence, chrCountsPostfix);
             if (sequence.Length >= minSeqLength)
             {
                 for (int pos = 1; pos < sequence.Length; pos++)
                 {
-                    computeDivergenceForPos(sequence, ref maxDivergence, ref seqPrefixForMax, ref seqPostfixForMax, pos);
+                    computeDivergenceForPos(sequence, ref maxDivergence, ref seqPrefixForMax, ref seqPostfixForMax, pos,
+                        chrCountsPrefix, chrCountsPostfix);
                 }    
             }
             double significance = computeSignificance(sequence, maxDivergence);
@@ -83,14 +87,20 @@ namespace JensenShannonDivComp.Utils
             return result;
         }
 
-        private void computeDivergenceForPos(string sequence, ref double? maxDivergence, ref string seqPrefixForMax, ref string seqPostfixForMax, int pos)
+        private void computeDivergenceForPos(string sequence, ref double? maxDivergence,
+            ref string seqPrefixForMax, ref string seqPostfixForMax, int pos,
+            Dictionary<char, long> chrCountsPrefix, Dictionary<char, long> chrCountsPostfix)
         {
+            int seqLength = sequence.Length;
             string sequencePrefix = sequence.Substring(0, pos);
             string sequencePostfix = sequence.Substring(pos);
-            double[] frequenciesPrefix = frequencyComputer.computeFrequency(sequencePrefix);
-            double[] frequenciesPostfix = frequencyComputer.computeFrequency(sequencePostfix);
-            double weightPrefix = (double)sequencePrefix.Length / (double)sequence.Length;
-            double weightPostfix = (double)sequencePostfix.Length / (double)sequence.Length;
+            char currentChar = sequence[pos-1];
+            frequencyComputer.increaseCountChar(currentChar, chrCountsPrefix);
+            frequencyComputer.decreaseCountChar(currentChar, chrCountsPostfix);
+            double[] frequenciesPrefix = frequencyComputer.determineFrequencies(chrCountsPrefix, seqLength);
+            double[] frequenciesPostfix = frequencyComputer.determineFrequencies(chrCountsPostfix, seqLength);
+            double weightPrefix = (double)pos / (double)seqLength;
+            double weightPostfix = ((double)seqLength - (double)pos) / (double)seqLength;
             double divergence = jenShaDivComputer.computeDivergence(frequenciesPrefix, frequenciesPostfix,
                 weightPrefix, weightPostfix);
             if ((maxDivergence == null) || (maxDivergence < divergence))
