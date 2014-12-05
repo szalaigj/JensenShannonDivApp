@@ -1,6 +1,7 @@
 ﻿using JensenShannonDivComp.Utils;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,8 +26,10 @@ namespace JensenShannonDivComp
             Console.WriteLine("\t'ent' - query entropy of the current sequence");
             Console.WriteLine("\t'jensha' - query Jensen-Shannon divergence based on position");
             Console.WriteLine("\t'split' - split the sequence based on the maximal Jensen-Shannon divergence values of subsequences");
+            Console.WriteLine("\t'save' - save subsequences of the splitted sequence");
             Console.WriteLine("\t'exit' - exit program");
             string sequence = "";
+            List<string> subsequences = new List<string>();
             bool done = false;
             while (!done)
             {
@@ -44,7 +47,10 @@ namespace JensenShannonDivComp
                         computeJenShaDiv(frequencyComputer, jenShaDivComputer, sequence);
                         break;
                     case "split":
-                        splitSequence(splitter, sequence);
+                        subsequences = splitSequence(splitter, sequence);
+                        break;
+                    case "save":
+                        saveSubsequences(subsequences);
                         break;
                     case "exit":
                         done = true;
@@ -85,18 +91,36 @@ namespace JensenShannonDivComp
             Console.WriteLine("The Jensen-Shannon divergence of the subsequences: {0}", divergence);
         }
 
-        private static void splitSequence(Splitter splitter, string sequence)
+        private static List<string> splitSequence(Splitter splitter, string sequence)
         {
-            string[] subsequences = splitter.split(sequence);
-            if (subsequences.Length == 2)
+            List<string> subsequences = splitter.split(sequence);
+            if (subsequences.Count > 1)
             {
-                Console.WriteLine("The subsequences which belong to the maximal divergence value: {0} - {1}",
-                    subsequences[0], subsequences[1]);
+                Console.WriteLine("The splitted subsequences:");
+                foreach (var subsequence in subsequences)
+                {
+                    Console.WriteLine(subsequence);
+                }
             }
             else
             {
                 Console.WriteLine("The sequence cannot be splitted because of significance threshold.");
             }
+            return subsequences;
+        }
+
+        private static void saveSubsequences(List<string> subsequences)
+        {
+            Console.WriteLine("Please give the path with filename:");
+            string file = Console.ReadLine();
+            StreamWriter writer = new StreamWriter(file);
+            foreach (var subsequence in subsequences)
+            {
+                writer.WriteLine(subsequence);
+            }
+            writer.Flush();
+            writer.Dispose();
+            writer = null;
         }
     }
 }

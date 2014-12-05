@@ -21,6 +21,8 @@ namespace JensenShannonDivComp.Utils
         private double aParam;
         private double bParam;
         private double significanceThreshold;
+        private int minSeqLength;
+        private ChiSquared chiSquared;
 
         public Splitter(FrequencyComputer frequencyComputer, JenShaDivComputer jenShaDivComputer)
         {
@@ -46,11 +48,13 @@ namespace JensenShannonDivComp.Utils
                 this.aParam = 2.32;
                 this.bParam = -4.32;
             }
-            this.significanceThreshold = 0.95;
+            this.chiSquared = new MathNet.Numerics.Distributions.ChiSquared(k - 1);
+            this.significanceThreshold = 0.9;
+            this.minSeqLength = 5;
         }
 
         public Splitter(FrequencyComputer frequencyComputer, JenShaDivComputer jenShaDivComputer,
-            double betaParam, double aParam, double bParam, double significanceThreshold)
+            double betaParam, double aParam, double bParam, double significanceThreshold, int minSeqLength)
         {
             this.frequencyComputer = frequencyComputer;
             this.jenShaDivComputer = jenShaDivComputer;
@@ -58,31 +62,24 @@ namespace JensenShannonDivComp.Utils
             this.aParam = aParam;
             this.bParam = bParam;
             this.significanceThreshold = significanceThreshold;
+            this.minSeqLength = minSeqLength;
         }
 
-        public string[] split(string sequence)
+        public List<string> split(string sequence)
         {
-            string[] result;
+            List<string> result;
             double? maxDivergence = null;
             string seqPrefixForMax = "";
             string seqPostfixForMax = "";
-            for (int pos = 1; pos < sequence.Length; pos++)
+            if (sequence.Length >= minSeqLength)
             {
-                computeDivergenceForPos(sequence, ref maxDivergence, ref seqPrefixForMax, ref seqPostfixForMax, pos);
+                for (int pos = 1; pos < sequence.Length; pos++)
+                {
+                    computeDivergenceForPos(sequence, ref maxDivergence, ref seqPrefixForMax, ref seqPostfixForMax, pos);
+                }    
             }
-            int k = frequencyComputer.Symbols.Length;
-            int N = sequence.Length;
-            double NEff = aParam * Math.Log(N) + bParam;
-            var chiSquared = new MathNet.Numerics.Distributions.ChiSquared(k - 1);
-            double significance = Math.Pow(chiSquared.CumulativeDistribution(N * Math.Log(2) * betaParam * maxDivergence.Value), NEff);
-            if (significance > significanceThreshold)
-            {
-                result = new string[] { seqPrefixForMax, seqPostfixForMax };
-            }
-            else
-            {
-                result = new string[] { };
-            }
+            double significance = computeSignificance(sequence, maxDivergence);
+            result = checkSignificance(sequence, seqPrefixForMax, seqPostfixForMax, significance);
             return result;
         }
 
@@ -102,6 +99,36 @@ namespace JensenShannonDivComp.Utils
                 seqPrefixForMax = sequencePrefix;
                 seqPostfixForMax = sequencePostfix;
             }
+        }
+
+        private double computeSignificance(string sequence, double? maxDivergence)
+        {
+            double significance = 0.0;
+            // If 2 * this.cursorStart > sequence.Length then the maxDivergence has had null value so the following is necessary:
+            if (maxDivergence.HasValue && (maxDivergence.Value > 0.0))
+            {
+                int N = sequence.Length;
+                double NEff = aParam * Math.Log(N) + bParam;
+                significance = Math.Pow(chiSquared.CumulativeDistribution(N * Math.Log(2) * betaParam * maxDivergence.Value), NEff);
+            }
+            return significance;
+        }
+
+        private List<string> checkSignificance(string sequence, string seqPrefixForMax, string seqPostfixForMax, double significance)
+        {
+            List<string> result;
+            if (significance > significanceThreshold)
+            {
+                var resultPrefix = split(seqPrefixForMax);
+                var resultPostfix = split(seqPostfixForMax);
+                result = new List<string>(resultPrefix);
+                result.AddRange(resultPostfix);
+            }
+            else
+            {
+                result = new List<string>() { sequence };
+            }
+            return result;
         }
     }
 }
