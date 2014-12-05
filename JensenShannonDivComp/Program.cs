@@ -23,6 +23,7 @@ namespace JensenShannonDivComp
             Splitter splitter = new Splitter(frequencyComputer, jenShaDivComputer);
             Console.WriteLine("Please give the action type:");
             Console.WriteLine("\t'seq' - add new sequence");
+            Console.WriteLine("\t'load' - load a sequence from a file");
             Console.WriteLine("\t'ent' - query entropy of the current sequence");
             Console.WriteLine("\t'jensha' - query Jensen-Shannon divergence based on position");
             Console.WriteLine("\t'split' - split the sequence based on the maximal Jensen-Shannon divergence values of subsequences");
@@ -39,6 +40,9 @@ namespace JensenShannonDivComp
                 {
                     case "seq":
                         sequence = addSequence();
+                        break;
+                    case "load":
+                        sequence = loadSequences();
                         break;
                     case "ent":
                         computeShaEnt(frequencyComputer, shannonEntropyComputer, sequence);
@@ -67,6 +71,22 @@ namespace JensenShannonDivComp
         {
             Console.WriteLine("Please give the sequence:");
             string sequence = Console.ReadLine();
+            return sequence;
+        }
+
+        private static string loadSequences()
+        {
+            string sequence = "";
+            Console.WriteLine("Please give the path with filename:");
+            string file = Console.ReadLine();
+            using (StreamReader sr = new StreamReader(file))
+            {
+                string line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    sequence += line;
+                }
+            }
             return sequence;
         }
 
