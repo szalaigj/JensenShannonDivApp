@@ -119,7 +119,7 @@ namespace JensenShannonDivComp.Utils
             {
                 int N = sequence.Length;
                 double NEff = aParam * Math.Log(N) + bParam;
-                significance = Math.Pow(chiSquared.CumulativeDistribution(N * Math.Log(2) * betaParam * maxDivergence.Value), NEff);
+                significance = Math.Pow(chiSquared.CumulativeDistribution(2 * N * Math.Log(2) * betaParam * maxDivergence.Value), NEff);
             }
             return significance;
         }
