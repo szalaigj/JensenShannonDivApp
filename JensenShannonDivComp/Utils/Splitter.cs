@@ -50,7 +50,7 @@ namespace JensenShannonDivComp.Utils
             }
             this.chiSquared = new MathNet.Numerics.Distributions.ChiSquared(k - 1);
             this.significanceThreshold = 0.9;
-            this.minSeqLength = 5;
+            this.minSeqLength = 13;
         }
 
         public Splitter(FrequencyComputer frequencyComputer, JenShaDivComputer jenShaDivComputer,
