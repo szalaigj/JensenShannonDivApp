@@ -97,8 +97,8 @@ namespace JensenShannonDivComp.Utils
             char currentChar = sequence[pos-1];
             frequencyComputer.increaseCountChar(currentChar, chrCountsPrefix);
             frequencyComputer.decreaseCountChar(currentChar, chrCountsPostfix);
-            double[] frequenciesPrefix = frequencyComputer.determineFrequencies(chrCountsPrefix, seqLength);
-            double[] frequenciesPostfix = frequencyComputer.determineFrequencies(chrCountsPostfix, seqLength);
+            double[] frequenciesPrefix = frequencyComputer.determineFrequencies(chrCountsPrefix, pos);
+            double[] frequenciesPostfix = frequencyComputer.determineFrequencies(chrCountsPostfix, seqLength - pos);
             double weightPrefix = (double)pos / (double)seqLength;
             double weightPostfix = ((double)seqLength - (double)pos) / (double)seqLength;
             double divergence = jenShaDivComputer.computeDivergence(frequenciesPrefix, frequenciesPostfix,
